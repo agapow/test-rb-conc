@@ -10,6 +10,7 @@ of various concurrency strategies.
 ### IMPORTS
 
 require 'benchmark'
+require 'open-uri'
 
 
 ### IMPLEMENTATION
@@ -32,7 +33,7 @@ TEST_FNS = {
    "fibonacci 100" => lambda { return fibo_fn(100) },
    "sumprimes 1000" => lambda { return sumprimes_fn(100) },
    "readwrite" => lambda { return readwrite_fn() },
-   #"readrandom" => lambda { return readrandom_fn() },
+   "readurl" => lambda { return readurl_fn() },
 }
 
 def empty_fn
@@ -75,7 +76,7 @@ def readwrite_fn()
    fin = File.open("lorem.txt", "r")
    fout = File.open("/dev/null", "w")
    length = 103 # We know the src file is 103 lines long from readlines
-   (0...10000).each {
+   (0...3000).each {
       posn = rand(length)
       fin.seek(posn)
       fout.write(fin.readline())
@@ -84,11 +85,10 @@ def readwrite_fn()
    fout.close()
 end
 
-def readrandom_fn()
-   fh = File.open("/dev/random", "rb")
-   (0..1000).each { |x|
-      fh.read(1024)
-   }
+def readurl_fn()
+   #uri = open("http://www.hpa-bioinformatics.org.uk/")
+   uri = open("http://www.google.com/")
+   return uri.read()
 end
 
 
@@ -186,7 +186,7 @@ puts "Commencing tests ..."
 ITERATIONS.each { |num_iters|
    TEST_FNS.each_pair { |test_name, test_fn|
       puts "\nRunning #{test_name} with #{num_iters} iterations ...\n"
-      Benchmark.bm { |bmark|
+      Benchmark.bmbm { |bmark|
          CONC_FNS.each_pair { |conc_name, conc_fn|
             bmark.report(conc_name.dup()) {
                (0..REPLICATE_CNT).each { |i| conc_fn.call(test_fn, num_iters)}
